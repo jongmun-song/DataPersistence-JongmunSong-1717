@@ -1,5 +1,9 @@
 # Read
 
+> 이 문서는 Sample을 예시로 설명하며 Order/ProductionQueueEntry에도 동일 원칙이
+> 적용된다(단, ProductionQueueEntry는 orderId를 키로 사용 —
+> [`docs/design/phase5-foundation.md`](../design/phase5-foundation.md) 참고).
+
 ## 개요
 
 저장된 시료 데이터를 조회하는 기능. 전체 목록 보기와 특정 ID 검색을 지원한다.

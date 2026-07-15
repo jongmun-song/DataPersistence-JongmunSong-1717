@@ -36,12 +36,21 @@
 - Phase 2: Read 구현 — [`docs/design/phase2-read.md`](docs/design/phase2-read.md)
 - Phase 3: Update 구현 — [`docs/design/phase3-update.md`](docs/design/phase3-update.md)
 - Phase 4: Delete 구현 — [`docs/design/phase4-delete.md`](docs/design/phase4-delete.md)
+- Phase 5: 모델 선택 메뉴 + Order/ProductionQueueEntry 리포지토리 뼈대 — [`docs/design/phase5-foundation.md`](docs/design/phase5-foundation.md)
+- Phase 6: Order/ProductionQueueEntry Create 구현 — [`docs/design/phase6-create.md`](docs/design/phase6-create.md)
+- Phase 7: Order/ProductionQueueEntry Read 구현 — [`docs/design/phase7-read.md`](docs/design/phase7-read.md)
+- Phase 8: Order/ProductionQueueEntry Update 구현 — [`docs/design/phase8-update.md`](docs/design/phase8-update.md)
+- Phase 9: Order/ProductionQueueEntry Delete 구현 — [`docs/design/phase9-delete.md`](docs/design/phase9-delete.md)
 
 각 phase 문서에는 목표, 리포지토리/콘솔 UI에 추가할 내용, 메뉴 구성, 그리고 **실행으로 확인해야 하는 완료 기준**이 함께 정의되어 있습니다. 어떤 phase든 완료 기준(빌드 성공 + 실제 실행 확인)을 만족하지 못하면 다음 phase로 넘어가지 않습니다.
 
 ## 현재 상태
 
 `Model/Sample.h`, `Model/Order.h`, `Model/ProductionQueueEntry.h`가 정의되어 있고 `DataPersistence.vcxproj`에 등록되어 있습니다. 그 외 리포지토리/콘솔 UI 소스는 아직 없습니다 — Phase 0(`docs/design/phase0-foundation.md`)에서 `SampleRepository`/`ConsoleApp`/`main.cpp`를 추가합니다. 새 소스 파일을 추가할 때는 `DataPersistence.vcxproj`(`<ClCompile>`/`<ClInclude>`가 포함된 `<ItemGroup>`)와 `DataPersistence.vcxproj.filters`(“소스 파일” / “헤더 파일”로 분류) 양쪽 모두에 등록하세요.
+
+`Order`/`ProductionQueueEntry`에 대한 리포지토리·콘솔 UI 확장은 Phase 5~9
+(`docs/design/phase5-foundation.md` ~ `phase9-delete.md`)로 설계 문서만 작성되어
+있으며, 아직 구현되지 않았습니다.
 
 ## 빌드
 

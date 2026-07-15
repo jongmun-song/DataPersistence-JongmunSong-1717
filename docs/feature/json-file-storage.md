@@ -1,5 +1,9 @@
 # JSON 파일 저장
 
+> 이 문서는 Sample을 예시로 설명하며 Order/ProductionQueueEntry에도 동일 원칙이
+> 적용된다(단, ProductionQueueEntry는 orderId를 키로 사용 —
+> [`docs/design/phase5-foundation.md`](../design/phase5-foundation.md) 참고).
+
 ## 개요
 
 메모리 상의 시료(`Sample`) 목록을 JSON 파일로 영속화하는 기능. [nlohmann/json](https://github.com/nlohmann/json)을 사용해 직렬화하며, 애플리케이션을 다시 실행해도 데이터가 유지되도록 한다(요구사항 문서상 "데이터 영속성"의 정의).

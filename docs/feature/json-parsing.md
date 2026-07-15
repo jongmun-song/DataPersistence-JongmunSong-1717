@@ -1,5 +1,9 @@
 # JSON 파싱
 
+> 이 문서는 Sample을 예시로 설명하며 Order/ProductionQueueEntry에도 동일 원칙이
+> 적용된다(단, ProductionQueueEntry는 orderId를 키로 사용 —
+> [`docs/design/phase5-foundation.md`](../design/phase5-foundation.md) 참고).
+
 ## 개요
 
 디스크에 저장된 JSON 파일을 읽어 메모리 상의 시료(`Sample`) 목록으로 변환하는 기능. 외부 라이브러리인 [nlohmann/json](https://github.com/nlohmann/json)을 사용해 파일 내용을 파싱한다(직접 파서를 구현하지 않는다).
