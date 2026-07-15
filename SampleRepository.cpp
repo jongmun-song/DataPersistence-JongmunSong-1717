@@ -139,4 +139,29 @@ namespace DataPersistence
         }
         return false;
     }
+
+    bool SampleRepository::remove(int id)
+    {
+        for (std::size_t index = 0; index < sampleList_.size(); ++index)
+        {
+            if (sampleList_[index].id == id)
+            {
+                const Model::Sample backup = sampleList_[index];
+                sampleList_.erase(sampleList_.begin() + static_cast<std::ptrdiff_t>(index));
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    sampleList_.insert(sampleList_.begin() + static_cast<std::ptrdiff_t>(index), backup);
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

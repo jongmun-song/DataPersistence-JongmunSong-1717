@@ -4,8 +4,7 @@
 // docs/feature/json-parsing.md, docs/feature/json-file-storage.md).
 //
 // Phase 0 scope: load/save/all only. Phase 1 adds create(). Phase 2 adds
-// findById(). Phase 3 adds update(). Remaining Delete-specific methods
-// (remove) are added in later phases.
+// findById(). Phase 3 adds update(). Phase 4 adds remove().
 
 #include <filesystem>
 #include <functional>
@@ -54,6 +53,14 @@ namespace DataPersistence
         // throws, the entry is rolled back to its backed-up value and the
         // exception propagates to the caller. Returns true on success.
         bool update(int id, const std::function<void(Model::Sample&)>& mutator);
+
+        // Finds the entry with the given id and removes it from the
+        // in-memory list. Returns false if no such entry exists (not an
+        // exception - see docs/feature/delete.md). On success, backs up the
+        // removed value and its index before persisting via save(). If
+        // save() throws, the entry is restored at its original index and
+        // the exception propagates to the caller. Returns true on success.
+        bool remove(int id);
 
     private:
         int nextId() const;

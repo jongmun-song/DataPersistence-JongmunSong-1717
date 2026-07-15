@@ -5,7 +5,7 @@
 //
 // Phase 0 scope: a menu with only the "exit" option. Phase 1 adds the
 // Create menu item. Phase 2 adds the read-all/find-by-id menu items.
-// Remaining CRUD menu items are added incrementally in later phases.
+// Phase 3 adds the Update menu item. Phase 4 adds the Delete menu item.
 
 #include "SampleRepository.h"
 
@@ -25,6 +25,7 @@ namespace DataPersistence
         void handleReadAll() const;
         void handleReadById() const;
         void handleUpdate();
+        void handleDelete();
 
         SampleRepository& repository_;
     };
