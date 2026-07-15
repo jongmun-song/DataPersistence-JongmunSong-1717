@@ -154,6 +154,7 @@ namespace DataPersistence
         std::cout << "2. 전체 목록 보기\n";
         std::cout << "3. ID로 검색\n";
         std::cout << "4. Update\n";
+        std::cout << "5. Delete\n";
         std::cout << "0. 뒤로가기\n";
         std::cout << "선택: ";
     }
@@ -335,6 +336,71 @@ namespace DataPersistence
         }
     }
 
+    void OrderConsoleApp::handleDelete()
+    {
+        std::string idText;
+        try
+        {
+            idText = readLine("삭제할 id (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Delete를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> id = tryParseNumber<int>(idText);
+        if (!id.has_value())
+        {
+            std::cout << "id 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::Order> found = repository_.findById(*id);
+        if (!found.has_value())
+        {
+            std::cout << "해당 ID의 주문을 찾을 수 없습니다.\n";
+            return;
+        }
+
+        std::cout << "삭제 대상: ";
+        printOrder(*found);
+
+        std::string confirm;
+        try
+        {
+            confirm = readLine("정말 삭제하시겠습니까? (Y/N): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Delete를 취소했습니다.\n";
+            return;
+        }
+
+        if (confirm != "Y" && confirm != "y")
+        {
+            std::cout << "삭제를 취소했습니다.\n";
+            return;
+        }
+
+        try
+        {
+            const bool removed = repository_.remove(*id);
+            if (removed)
+            {
+                std::cout << "삭제되었습니다.\n";
+            }
+            else
+            {
+                std::cout << "해당 ID의 주문을 찾을 수 없습니다.\n";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << "저장 중 오류가 발생했습니다: " << e.what() << '\n';
+        }
+    }
+
     void OrderConsoleApp::run()
     {
         bool running = true;
@@ -368,6 +434,9 @@ namespace DataPersistence
                 break;
             case 4:
                 handleUpdate();
+                break;
+            case 5:
+                handleDelete();
                 break;
             default:
                 std::cout << "알 수 없는 메뉴입니다.\n";

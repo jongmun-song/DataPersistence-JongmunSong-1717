@@ -143,4 +143,29 @@ namespace DataPersistence
         }
         return false;
     }
+
+    bool OrderRepository::remove(int id)
+    {
+        for (std::size_t index = 0; index < orderList_.size(); ++index)
+        {
+            if (orderList_[index].id == id)
+            {
+                const Model::Order backup = orderList_[index];
+                orderList_.erase(orderList_.begin() + static_cast<std::ptrdiff_t>(index));
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    orderList_.insert(orderList_.begin() + static_cast<std::ptrdiff_t>(index), backup);
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

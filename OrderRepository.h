@@ -57,6 +57,14 @@ namespace DataPersistence
         // exception propagates to the caller. Returns true on success.
         bool update(int id, const std::function<void(Model::Order&)>& mutator);
 
+        // Finds the entry with the given id and removes it from the
+        // in-memory list, then persists via save(). Returns false if no
+        // such entry exists (not an exception - see docs/feature/delete.md).
+        // If save() throws, the removed entry is restored to its original
+        // position and the exception propagates to the caller. Returns
+        // true on success.
+        bool remove(int id);
+
     private:
         int nextId() const;
 

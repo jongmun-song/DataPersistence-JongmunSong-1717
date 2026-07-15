@@ -141,4 +141,29 @@ namespace DataPersistence
         }
         return false;
     }
+
+    bool ProductionQueueEntryRepository::remove(int orderId)
+    {
+        for (std::size_t index = 0; index < entryList_.size(); ++index)
+        {
+            if (entryList_[index].orderId == orderId)
+            {
+                const Model::ProductionQueueEntry backup = entryList_[index];
+                entryList_.erase(entryList_.begin() + static_cast<std::ptrdiff_t>(index));
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    entryList_.insert(entryList_.begin() + static_cast<std::ptrdiff_t>(index), backup);
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }
