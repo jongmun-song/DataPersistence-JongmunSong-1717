@@ -88,7 +88,7 @@ namespace DataPersistence
         std::cout << "3. ID로 검색\n";
         std::cout << "4. Update\n";
         std::cout << "5. Delete\n";
-        std::cout << "0. 종료\n";
+        std::cout << "0. 뒤로가기\n";
         std::cout << "선택: ";
     }
 

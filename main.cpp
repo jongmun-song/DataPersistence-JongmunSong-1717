@@ -1,4 +1,5 @@
-﻿// Entry point (see docs/design/phase0-foundation.md).
+// Entry point (see docs/design/phase0-foundation.md,
+// docs/design/phase5-foundation.md).
 
 #include <exception>
 #include <iostream>
@@ -8,6 +9,11 @@
 #endif
 
 #include "ConsoleApp.h"
+#include "MainConsoleApp.h"
+#include "OrderConsoleApp.h"
+#include "OrderRepository.h"
+#include "ProductionQueueEntryConsoleApp.h"
+#include "ProductionQueueEntryRepository.h"
 #include "SampleRepository.h"
 
 int main()
@@ -18,11 +24,13 @@ int main()
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    DataPersistence::SampleRepository repository("samples.json");
+    DataPersistence::SampleRepository sampleRepository("samples.json");
+    DataPersistence::OrderRepository orderRepository("orders.json");
+    DataPersistence::ProductionQueueEntryRepository entryRepository("production_queue.json");
 
     try
     {
-        repository.load();
+        sampleRepository.load();
     }
     catch (const std::exception& e)
     {
@@ -30,8 +38,32 @@ int main()
         return 1;
     }
 
-    DataPersistence::ConsoleApp app(repository);
-    app.run();
+    try
+    {
+        orderRepository.load();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "orders.json 파일을 읽는 중 오류가 발생했습니다: " << e.what() << '\n';
+        return 1;
+    }
+
+    try
+    {
+        entryRepository.load();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "production_queue.json 파일을 읽는 중 오류가 발생했습니다: " << e.what() << '\n';
+        return 1;
+    }
+
+    DataPersistence::ConsoleApp sampleApp(sampleRepository);
+    DataPersistence::OrderConsoleApp orderApp(orderRepository);
+    DataPersistence::ProductionQueueEntryConsoleApp entryApp(entryRepository);
+
+    DataPersistence::MainConsoleApp mainApp(sampleApp, orderApp, entryApp);
+    mainApp.run();
 
     return 0;
 }

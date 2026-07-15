@@ -152,10 +152,20 @@
     <ClInclude Include="Model\ProductionQueueEntry.h" />
     <ClInclude Include="SampleRepository.h" />
     <ClInclude Include="ConsoleApp.h" />
+    <ClInclude Include="OrderRepository.h" />
+    <ClInclude Include="ProductionQueueEntryRepository.h" />
+    <ClInclude Include="OrderConsoleApp.h" />
+    <ClInclude Include="ProductionQueueEntryConsoleApp.h" />
+    <ClInclude Include="MainConsoleApp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SampleRepository.cpp" />
     <ClCompile Include="ConsoleApp.cpp" />
+    <ClCompile Include="OrderRepository.cpp" />
+    <ClCompile Include="ProductionQueueEntryRepository.cpp" />
+    <ClCompile Include="OrderConsoleApp.cpp" />
+    <ClCompile Include="ProductionQueueEntryConsoleApp.cpp" />
+    <ClCompile Include="MainConsoleApp.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
