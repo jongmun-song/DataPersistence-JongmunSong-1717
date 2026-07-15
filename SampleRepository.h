@@ -4,10 +4,11 @@
 // docs/feature/json-parsing.md, docs/feature/json-file-storage.md).
 //
 // Phase 0 scope: load/save/all only. Phase 1 adds create(). Phase 2 adds
-// findById(). Remaining Update/Delete-specific methods (update, remove) are
-// added in later phases.
+// findById(). Phase 3 adds update(). Remaining Delete-specific methods
+// (remove) are added in later phases.
 
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -45,6 +46,14 @@ namespace DataPersistence
         // Returns std::nullopt if no such entry exists (not an exception -
         // "not found" is normal control flow, see docs/feature/read.md).
         std::optional<Model::Sample> findById(int id) const;
+
+        // Finds the entry with the given id and applies mutator to it.
+        // Returns false if no such entry exists (not an exception - see
+        // docs/feature/update.md). On success, backs up the current value
+        // before applying mutator, then persists via save(). If save()
+        // throws, the entry is rolled back to its backed-up value and the
+        // exception propagates to the caller. Returns true on success.
+        bool update(int id, const std::function<void(Model::Sample&)>& mutator);
 
     private:
         int nextId() const;

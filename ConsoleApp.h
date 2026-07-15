@@ -24,6 +24,7 @@ namespace DataPersistence
         void handleCreate();
         void handleReadAll() const;
         void handleReadById() const;
+        void handleUpdate();
 
         SampleRepository& repository_;
     };

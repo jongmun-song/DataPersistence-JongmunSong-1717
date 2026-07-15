@@ -114,4 +114,29 @@ namespace DataPersistence
         }
         return std::nullopt;
     }
+
+    bool SampleRepository::update(int id, const std::function<void(Model::Sample&)>& mutator)
+    {
+        for (Model::Sample& sample : sampleList_)
+        {
+            if (sample.id == id)
+            {
+                const Model::Sample backup = sample;
+                mutator(sample);
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    sample = backup;
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

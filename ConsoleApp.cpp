@@ -1,5 +1,6 @@
 ﻿#include "ConsoleApp.h"
 
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -85,6 +86,7 @@ namespace DataPersistence
         std::cout << "1. Create\n";
         std::cout << "2. 전체 목록 보기\n";
         std::cout << "3. ID로 검색\n";
+        std::cout << "4. Update\n";
         std::cout << "0. 종료\n";
         std::cout << "선택: ";
     }
@@ -173,6 +175,118 @@ namespace DataPersistence
         printSample(*found);
     }
 
+    void ConsoleApp::handleUpdate()
+    {
+        std::string idText;
+        try
+        {
+            idText = readLine("수정할 id (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> id = tryParseNumber<int>(idText);
+        if (!id.has_value())
+        {
+            std::cout << "id 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::Sample> found = repository_.findById(*id);
+        if (!found.has_value())
+        {
+            std::cout << "해당 ID의 시료를 찾을 수 없습니다.\n";
+            return;
+        }
+
+        std::cout << "현재 값: ";
+        printSample(*found);
+
+        std::cout << "수정할 필드를 선택하세요.\n";
+        std::cout << "1. name\n";
+        std::cout << "2. averageProductionTimePerUnit\n";
+        std::cout << "3. yieldRatio\n";
+        std::cout << "4. stockQuantity\n";
+
+        std::string fieldChoiceText;
+        try
+        {
+            fieldChoiceText = readLine("선택 (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> fieldChoice = tryParseNumber<int>(fieldChoiceText);
+        if (!fieldChoice.has_value())
+        {
+            std::cout << "선택 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        std::function<void(Model::Sample&)> mutator;
+        try
+        {
+            switch (*fieldChoice)
+            {
+            case 1:
+            {
+                const std::string value = readNonEmptyString("name");
+                mutator = [value](Model::Sample& sample) { sample.name = value; };
+                break;
+            }
+            case 2:
+            {
+                const double value = readNumber<double>("averageProductionTimePerUnit");
+                mutator = [value](Model::Sample& sample) { sample.averageProductionTimePerUnit = value; };
+                break;
+            }
+            case 3:
+            {
+                const double value = readNumber<double>("yieldRatio");
+                mutator = [value](Model::Sample& sample) { sample.yieldRatio = value; };
+                break;
+            }
+            case 4:
+            {
+                const int value = readNumber<int>("stockQuantity");
+                mutator = [value](Model::Sample& sample) { sample.stockQuantity = value; };
+                break;
+            }
+            default:
+                std::cout << "알 수 없는 필드입니다.\n";
+                return;
+            }
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        try
+        {
+            const bool updated = repository_.update(*id, mutator);
+            if (updated)
+            {
+                std::cout << "수정되었습니다.\n";
+            }
+            else
+            {
+                std::cout << "해당 ID의 시료를 찾을 수 없습니다.\n";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << "저장 중 오류가 발생했습니다: " << e.what() << '\n';
+        }
+    }
+
     void ConsoleApp::run()
     {
         bool running = true;
@@ -203,6 +317,9 @@ namespace DataPersistence
                 break;
             case 3:
                 handleReadById();
+                break;
+            case 4:
+                handleUpdate();
                 break;
             default:
                 std::cout << "알 수 없는 메뉴입니다.\n";
