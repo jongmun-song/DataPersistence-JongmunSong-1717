@@ -64,4 +64,44 @@ namespace DataPersistence
     {
         return entryList_;
     }
+
+    bool ProductionQueueEntryRepository::exists(int orderId) const
+    {
+        for (const Model::ProductionQueueEntry& entry : entryList_)
+        {
+            if (entry.orderId == orderId)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Model::ProductionQueueEntry ProductionQueueEntryRepository::create(const Model::ProductionQueueEntry& input)
+    {
+        if (input.orderId <= 0)
+        {
+            throw std::invalid_argument("orderId는 0보다 커야 합니다.");
+        }
+        if (exists(input.orderId))
+        {
+            throw std::invalid_argument("이미 존재하는 orderId입니다.");
+        }
+
+        const Model::ProductionQueueEntry created = input;
+
+        entryList_.push_back(created);
+
+        try
+        {
+            save();
+        }
+        catch (...)
+        {
+            entryList_.pop_back();
+            throw;
+        }
+
+        return created;
+    }
 }

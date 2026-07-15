@@ -4,8 +4,9 @@
 // docs/design/phase5-foundation.md, docs/feature/json-parsing.md,
 // docs/feature/json-file-storage.md).
 //
-// Phase 5 scope: load/save/all only. Create/Read/Update/Delete are added in
-// later phases (see docs/design/phase6-create.md and onward).
+// Phase 5 scope: load/save/all only. Phase 6 adds create() (see
+// docs/design/phase6-create.md). Read/Update/Delete are added in later
+// phases.
 
 #include <filesystem>
 #include <vector>
@@ -32,7 +33,18 @@ namespace DataPersistence
 
         const std::vector<Model::ProductionQueueEntry>& all() const;
 
+        // Uses input.orderId as a natural key (no auto-assignment). Throws
+        // std::invalid_argument if orderId <= 0 or an entry with the same
+        // orderId already exists. Appends to the in-memory list and
+        // persists via save(). If save() throws, the just-added entry is
+        // rolled back from memory and the exception propagates to the
+        // caller.
+        // Returns the created ProductionQueueEntry.
+        Model::ProductionQueueEntry create(const Model::ProductionQueueEntry& input);
+
     private:
+        bool exists(int orderId) const;
+
         std::filesystem::path jsonPath_;
         std::vector<Model::ProductionQueueEntry> entryList_;
     };

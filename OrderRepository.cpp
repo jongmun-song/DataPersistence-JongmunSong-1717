@@ -64,4 +64,46 @@ namespace DataPersistence
     {
         return orderList_;
     }
+
+    int OrderRepository::nextId() const
+    {
+        int maxId = 0;
+        for (const Model::Order& order : orderList_)
+        {
+            if (order.id > maxId)
+            {
+                maxId = order.id;
+            }
+        }
+        return maxId + 1;
+    }
+
+    Model::Order OrderRepository::create(const Model::Order& input)
+    {
+        if (input.customerName.empty())
+        {
+            throw std::invalid_argument("customerName은 비어 있을 수 없습니다.");
+        }
+        if (input.orderedQuantity <= 0)
+        {
+            throw std::invalid_argument("orderedQuantity는 0보다 커야 합니다.");
+        }
+
+        Model::Order created = input;
+        created.id = nextId();
+
+        orderList_.push_back(created);
+
+        try
+        {
+            save();
+        }
+        catch (...)
+        {
+            orderList_.pop_back();
+            throw;
+        }
+
+        return created;
+    }
 }

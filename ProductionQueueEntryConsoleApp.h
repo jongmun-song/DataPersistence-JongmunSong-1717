@@ -1,10 +1,10 @@
 #pragma once
 
 // Console UI shell for ProductionQueueEntry (see
-// docs/design/phase5-foundation.md).
+// docs/design/phase5-foundation.md, docs/design/phase6-create.md).
 //
 // Phase 5 scope: a menu with only the "뒤로가기" option. Phase 6 adds the
-// Create menu item, Phase 7 adds Read, Phase 8 adds Update, Phase 9 adds
+// Create menu item. Phase 7 adds Read, Phase 8 adds Update, Phase 9 adds
 // Delete.
 
 #include "ProductionQueueEntryRepository.h"
@@ -21,6 +21,7 @@ namespace DataPersistence
 
     private:
         void printMenu() const;
+        void handleCreate();
 
         ProductionQueueEntryRepository& repository_;
     };
