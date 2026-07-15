@@ -102,4 +102,16 @@ namespace DataPersistence
 
         return created;
     }
+
+    std::optional<Model::Sample> SampleRepository::findById(int id) const
+    {
+        for (const Model::Sample& sample : sampleList_)
+        {
+            if (sample.id == id)
+            {
+                return sample;
+            }
+        }
+        return std::nullopt;
+    }
 }

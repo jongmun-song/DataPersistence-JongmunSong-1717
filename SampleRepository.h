@@ -3,11 +3,12 @@
 // JSON file-backed repository for Sample (see docs/design/phase0-foundation.md,
 // docs/feature/json-parsing.md, docs/feature/json-file-storage.md).
 //
-// Phase 0 scope: load/save/all only. Phase 1 adds create(). Remaining
-// Read/Update/Delete-specific methods (findById, update, remove) are added
-// in later phases.
+// Phase 0 scope: load/save/all only. Phase 1 adds create(). Phase 2 adds
+// findById(). Remaining Update/Delete-specific methods (update, remove) are
+// added in later phases.
 
 #include <filesystem>
+#include <optional>
 #include <vector>
 
 #include "Model/Sample.h"
@@ -39,6 +40,11 @@ namespace DataPersistence
         // propagates to the caller.
         // Returns the created Sample (with the assigned id).
         Model::Sample create(const Model::Sample& input);
+
+        // Linear-searches sampleList_ for an entry with the given id.
+        // Returns std::nullopt if no such entry exists (not an exception -
+        // "not found" is normal control flow, see docs/feature/read.md).
+        std::optional<Model::Sample> findById(int id) const;
 
     private:
         int nextId() const;
