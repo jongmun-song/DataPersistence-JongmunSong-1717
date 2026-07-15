@@ -3,8 +3,9 @@
 // JSON file-backed repository for Sample (see docs/design/phase0-foundation.md,
 // docs/feature/json-parsing.md, docs/feature/json-file-storage.md).
 //
-// Phase 0 scope: load/save/all only. Create/Read/Update/Delete-specific
-// methods (create, findById, update, remove) are added in later phases.
+// Phase 0 scope: load/save/all only. Phase 1 adds create(). Remaining
+// Read/Update/Delete-specific methods (findById, update, remove) are added
+// in later phases.
 
 #include <filesystem>
 #include <vector>
@@ -31,7 +32,17 @@ namespace DataPersistence
 
         const std::vector<Model::Sample>& all() const;
 
+        // Assigns a fresh id (input.id is ignored), validates required
+        // fields (throws std::invalid_argument on failure), appends to the
+        // in-memory list, and persists via save(). If save() throws, the
+        // just-added entry is rolled back from memory and the exception
+        // propagates to the caller.
+        // Returns the created Sample (with the assigned id).
+        Model::Sample create(const Model::Sample& input);
+
     private:
+        int nextId() const;
+
         std::filesystem::path jsonPath_;
         std::vector<Model::Sample> sampleList_;
     };

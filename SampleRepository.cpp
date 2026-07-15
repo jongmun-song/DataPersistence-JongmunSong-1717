@@ -23,8 +23,7 @@ namespace DataPersistence
         std::ifstream input(jsonPath_);
         if (!input.is_open())
         {
-            sampleList_.clear();
-            return;
+            throw std::runtime_error("Failed to open file for reading: " + jsonPath_.string());
         }
 
         // Parse errors (nlohmann::json::parse_error) propagate to the caller.
@@ -64,5 +63,43 @@ namespace DataPersistence
     const std::vector<Model::Sample>& SampleRepository::all() const
     {
         return sampleList_;
+    }
+
+    int SampleRepository::nextId() const
+    {
+        int maxId = 0;
+        for (const Model::Sample& sample : sampleList_)
+        {
+            if (sample.id > maxId)
+            {
+                maxId = sample.id;
+            }
+        }
+        return maxId + 1;
+    }
+
+    Model::Sample SampleRepository::create(const Model::Sample& input)
+    {
+        if (input.name.empty())
+        {
+            throw std::invalid_argument("name은 비어 있을 수 없습니다.");
+        }
+
+        Model::Sample created = input;
+        created.id = nextId();
+
+        sampleList_.push_back(created);
+
+        try
+        {
+            save();
+        }
+        catch (...)
+        {
+            sampleList_.pop_back();
+            throw;
+        }
+
+        return created;
     }
 }
