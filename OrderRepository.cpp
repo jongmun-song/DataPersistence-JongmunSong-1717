@@ -106,4 +106,41 @@ namespace DataPersistence
 
         return created;
     }
+
+    std::optional<Model::Order> OrderRepository::findById(int id) const
+    {
+        for (const Model::Order& order : orderList_)
+        {
+            if (order.id == id)
+            {
+                return order;
+            }
+        }
+        return std::nullopt;
+    }
+
+    bool OrderRepository::update(int id, const std::function<void(Model::Order&)>& mutator)
+    {
+        for (Model::Order& order : orderList_)
+        {
+            if (order.id == id)
+            {
+                const Model::Order backup = order;
+                mutator(order);
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    order = backup;
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

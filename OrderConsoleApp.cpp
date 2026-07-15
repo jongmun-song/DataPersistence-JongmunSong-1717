@@ -1,5 +1,6 @@
 #include "OrderConsoleApp.h"
 
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -112,6 +113,33 @@ namespace DataPersistence
                 std::cout << "선택이 올바르지 않습니다. 다시 입력하세요.\n";
             }
         }
+
+        std::string orderStateToString(Model::OrderState state)
+        {
+            switch (state)
+            {
+            case Model::OrderState::RESERVED:
+                return "RESERVED";
+            case Model::OrderState::CONFIRMED:
+                return "CONFIRMED";
+            case Model::OrderState::PRODUCING:
+                return "PRODUCING";
+            case Model::OrderState::RELEASE:
+                return "RELEASE";
+            case Model::OrderState::REJECTED:
+                return "REJECTED";
+            }
+            return "UNKNOWN";
+        }
+
+        void printOrder(const Model::Order& order)
+        {
+            std::cout << "id: " << order.id
+                       << ", sampleId: " << order.sampleId
+                       << ", customerName: " << order.customerName
+                       << ", orderedQuantity: " << order.orderedQuantity
+                       << ", state: " << orderStateToString(order.state) << '\n';
+        }
     }
 
     OrderConsoleApp::OrderConsoleApp(OrderRepository& repository)
@@ -123,6 +151,9 @@ namespace DataPersistence
     {
         std::cout << "\n=== Order 관리 ===\n";
         std::cout << "1. Create\n";
+        std::cout << "2. 전체 목록 보기\n";
+        std::cout << "3. ID로 검색\n";
+        std::cout << "4. Update\n";
         std::cout << "0. 뒤로가기\n";
         std::cout << "선택: ";
     }
@@ -154,6 +185,156 @@ namespace DataPersistence
         }
     }
 
+    void OrderConsoleApp::handleReadAll() const
+    {
+        const std::vector<Model::Order>& orders = repository_.all();
+        if (orders.empty())
+        {
+            std::cout << "등록된 주문이 없습니다.\n";
+            return;
+        }
+
+        for (const Model::Order& order : orders)
+        {
+            printOrder(order);
+        }
+    }
+
+    void OrderConsoleApp::handleReadById() const
+    {
+        std::string value;
+        try
+        {
+            value = readLine("검색할 id (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "검색을 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> id = tryParseNumber<int>(value);
+        if (!id.has_value())
+        {
+            std::cout << "id 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::Order> found = repository_.findById(*id);
+        if (!found.has_value())
+        {
+            std::cout << "해당 ID의 주문을 찾을 수 없습니다.\n";
+            return;
+        }
+
+        printOrder(*found);
+    }
+
+    void OrderConsoleApp::handleUpdate()
+    {
+        std::string idText;
+        try
+        {
+            idText = readLine("수정할 id (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> id = tryParseNumber<int>(idText);
+        if (!id.has_value())
+        {
+            std::cout << "id 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::Order> found = repository_.findById(*id);
+        if (!found.has_value())
+        {
+            std::cout << "해당 ID의 주문을 찾을 수 없습니다.\n";
+            return;
+        }
+
+        std::cout << "현재 값: ";
+        printOrder(*found);
+
+        std::cout << "수정할 필드를 선택하세요.\n";
+        std::cout << "1. customerName\n";
+        std::cout << "2. orderedQuantity\n";
+        std::cout << "3. state\n";
+
+        std::string fieldChoiceText;
+        try
+        {
+            fieldChoiceText = readLine("선택 (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> fieldChoice = tryParseNumber<int>(fieldChoiceText);
+        if (!fieldChoice.has_value())
+        {
+            std::cout << "선택 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        std::function<void(Model::Order&)> mutator;
+        try
+        {
+            switch (*fieldChoice)
+            {
+            case 1:
+            {
+                const std::string value = readNonEmptyString("customerName");
+                mutator = [value](Model::Order& order) { order.customerName = value; };
+                break;
+            }
+            case 2:
+            {
+                const int value = readNumber<int>("orderedQuantity");
+                mutator = [value](Model::Order& order) { order.orderedQuantity = value; };
+                break;
+            }
+            case 3:
+            {
+                const Model::OrderState value = readOrderState();
+                mutator = [value](Model::Order& order) { order.state = value; };
+                break;
+            }
+            default:
+                std::cout << "알 수 없는 필드입니다.\n";
+                return;
+            }
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        try
+        {
+            const bool updated = repository_.update(*id, mutator);
+            if (updated)
+            {
+                std::cout << "수정되었습니다.\n";
+            }
+            else
+            {
+                std::cout << "해당 ID의 주문을 찾을 수 없습니다.\n";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << "저장 중 오류가 발생했습니다: " << e.what() << '\n';
+        }
+    }
+
     void OrderConsoleApp::run()
     {
         bool running = true;
@@ -178,6 +359,15 @@ namespace DataPersistence
                 break;
             case 1:
                 handleCreate();
+                break;
+            case 2:
+                handleReadAll();
+                break;
+            case 3:
+                handleReadById();
+                break;
+            case 4:
+                handleUpdate();
                 break;
             default:
                 std::cout << "알 수 없는 메뉴입니다.\n";

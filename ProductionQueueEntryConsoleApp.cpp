@@ -1,5 +1,6 @@
 #include "ProductionQueueEntryConsoleApp.h"
 
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -93,6 +94,31 @@ namespace DataPersistence
                 std::cout << "선택이 올바르지 않습니다. 다시 입력하세요.\n";
             }
         }
+
+        std::string productionStateToString(Model::ProductionState state)
+        {
+            switch (state)
+            {
+            case Model::ProductionState::WAITING:
+                return "WAITING";
+            case Model::ProductionState::PRODUCING:
+                return "PRODUCING";
+            case Model::ProductionState::CONFIRMED:
+                return "CONFIRMED";
+            }
+            return "UNKNOWN";
+        }
+
+        void printProductionQueueEntry(const Model::ProductionQueueEntry& entry)
+        {
+            std::cout << "orderId: " << entry.orderId
+                       << ", sampleId: " << entry.sampleId
+                       << ", orderedQuantity: " << entry.orderedQuantity
+                       << ", shortageQuantity: " << entry.shortageQuantity
+                       << ", actualProductionQuantity: " << entry.actualProductionQuantity
+                       << ", totalProductionTime: " << entry.totalProductionTime
+                       << ", state: " << productionStateToString(entry.state) << '\n';
+        }
     }
 
     ProductionQueueEntryConsoleApp::ProductionQueueEntryConsoleApp(ProductionQueueEntryRepository& repository)
@@ -104,6 +130,9 @@ namespace DataPersistence
     {
         std::cout << "\n=== ProductionQueueEntry 관리 ===\n";
         std::cout << "1. Create\n";
+        std::cout << "2. 전체 목록 보기\n";
+        std::cout << "3. orderId로 검색\n";
+        std::cout << "4. Update\n";
         std::cout << "0. 뒤로가기\n";
         std::cout << "선택: ";
     }
@@ -138,6 +167,163 @@ namespace DataPersistence
         }
     }
 
+    void ProductionQueueEntryConsoleApp::handleReadAll() const
+    {
+        const std::vector<Model::ProductionQueueEntry>& entries = repository_.all();
+        if (entries.empty())
+        {
+            std::cout << "등록된 생산 큐 엔트리가 없습니다.\n";
+            return;
+        }
+
+        for (const Model::ProductionQueueEntry& entry : entries)
+        {
+            printProductionQueueEntry(entry);
+        }
+    }
+
+    void ProductionQueueEntryConsoleApp::handleReadByOrderId() const
+    {
+        std::string value;
+        try
+        {
+            value = readLine("검색할 orderId (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "검색을 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> orderId = tryParseNumber<int>(value);
+        if (!orderId.has_value())
+        {
+            std::cout << "orderId 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::ProductionQueueEntry> found = repository_.findByOrderId(*orderId);
+        if (!found.has_value())
+        {
+            std::cout << "해당 orderId의 생산 큐 엔트리를 찾을 수 없습니다.\n";
+            return;
+        }
+
+        printProductionQueueEntry(*found);
+    }
+
+    void ProductionQueueEntryConsoleApp::handleUpdate()
+    {
+        std::string orderIdText;
+        try
+        {
+            orderIdText = readLine("수정할 orderId (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> orderId = tryParseNumber<int>(orderIdText);
+        if (!orderId.has_value())
+        {
+            std::cout << "orderId 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        const std::optional<Model::ProductionQueueEntry> found = repository_.findByOrderId(*orderId);
+        if (!found.has_value())
+        {
+            std::cout << "해당 orderId의 생산 큐 엔트리를 찾을 수 없습니다.\n";
+            return;
+        }
+
+        std::cout << "현재 값: ";
+        printProductionQueueEntry(*found);
+
+        std::cout << "수정할 필드를 선택하세요.\n";
+        std::cout << "1. shortageQuantity\n";
+        std::cout << "2. actualProductionQuantity\n";
+        std::cout << "3. totalProductionTime\n";
+        std::cout << "4. state\n";
+
+        std::string fieldChoiceText;
+        try
+        {
+            fieldChoiceText = readLine("선택 (취소: q): ");
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        const std::optional<int> fieldChoice = tryParseNumber<int>(fieldChoiceText);
+        if (!fieldChoice.has_value())
+        {
+            std::cout << "선택 형식이 올바르지 않습니다.\n";
+            return;
+        }
+
+        std::function<void(Model::ProductionQueueEntry&)> mutator;
+        try
+        {
+            switch (*fieldChoice)
+            {
+            case 1:
+            {
+                const int value = readNumber<int>("shortageQuantity");
+                mutator = [value](Model::ProductionQueueEntry& entry) { entry.shortageQuantity = value; };
+                break;
+            }
+            case 2:
+            {
+                const int value = readNumber<int>("actualProductionQuantity");
+                mutator = [value](Model::ProductionQueueEntry& entry) { entry.actualProductionQuantity = value; };
+                break;
+            }
+            case 3:
+            {
+                const double value = readNumber<double>("totalProductionTime");
+                mutator = [value](Model::ProductionQueueEntry& entry) { entry.totalProductionTime = value; };
+                break;
+            }
+            case 4:
+            {
+                const Model::ProductionState value = readProductionState();
+                mutator = [value](Model::ProductionQueueEntry& entry) { entry.state = value; };
+                break;
+            }
+            default:
+                std::cout << "알 수 없는 필드입니다.\n";
+                return;
+            }
+        }
+        catch (const InputCancelled&)
+        {
+            std::cout << "Update를 취소했습니다.\n";
+            return;
+        }
+
+        try
+        {
+            const bool updated = repository_.update(*orderId, mutator);
+            if (updated)
+            {
+                std::cout << "수정되었습니다.\n";
+            }
+            else
+            {
+                std::cout << "해당 orderId의 생산 큐 엔트리를 찾을 수 없습니다.\n";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << "저장 중 오류가 발생했습니다: " << e.what() << '\n';
+        }
+    }
+
     void ProductionQueueEntryConsoleApp::run()
     {
         bool running = true;
@@ -162,6 +348,15 @@ namespace DataPersistence
                 break;
             case 1:
                 handleCreate();
+                break;
+            case 2:
+                handleReadAll();
+                break;
+            case 3:
+                handleReadByOrderId();
+                break;
+            case 4:
+                handleUpdate();
                 break;
             default:
                 std::cout << "알 수 없는 메뉴입니다.\n";

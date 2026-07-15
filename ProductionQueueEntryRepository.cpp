@@ -104,4 +104,41 @@ namespace DataPersistence
 
         return created;
     }
+
+    std::optional<Model::ProductionQueueEntry> ProductionQueueEntryRepository::findByOrderId(int orderId) const
+    {
+        for (const Model::ProductionQueueEntry& entry : entryList_)
+        {
+            if (entry.orderId == orderId)
+            {
+                return entry;
+            }
+        }
+        return std::nullopt;
+    }
+
+    bool ProductionQueueEntryRepository::update(int orderId, const std::function<void(Model::ProductionQueueEntry&)>& mutator)
+    {
+        for (Model::ProductionQueueEntry& entry : entryList_)
+        {
+            if (entry.orderId == orderId)
+            {
+                const Model::ProductionQueueEntry backup = entry;
+                mutator(entry);
+
+                try
+                {
+                    save();
+                }
+                catch (...)
+                {
+                    entry = backup;
+                    throw;
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

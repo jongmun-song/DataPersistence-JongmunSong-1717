@@ -5,10 +5,13 @@
 // docs/feature/json-file-storage.md).
 //
 // Phase 5 scope: load/save/all only. Phase 6 adds create() (see
-// docs/design/phase6-create.md). Read/Update/Delete are added in later
-// phases.
+// docs/design/phase6-create.md). Phase 7 adds findByOrderId() (see
+// docs/design/phase7-read.md). Phase 8 adds update() (see
+// docs/design/phase8-update.md). Delete is added in a later phase.
 
 #include <filesystem>
+#include <functional>
+#include <optional>
 #include <vector>
 
 #include "Model/ProductionQueueEntry.h"
@@ -41,6 +44,19 @@ namespace DataPersistence
         // caller.
         // Returns the created ProductionQueueEntry.
         Model::ProductionQueueEntry create(const Model::ProductionQueueEntry& input);
+
+        // Linear-searches entryList_ for an entry with the given orderId.
+        // Returns std::nullopt if no such entry exists (not an exception -
+        // "not found" is normal control flow, see docs/feature/read.md).
+        std::optional<Model::ProductionQueueEntry> findByOrderId(int orderId) const;
+
+        // Finds the entry with the given orderId and applies mutator to it.
+        // Returns false if no such entry exists (not an exception - see
+        // docs/feature/update.md). On success, backs up the current value
+        // before applying mutator, then persists via save(). If save()
+        // throws, the entry is rolled back to its backed-up value and the
+        // exception propagates to the caller. Returns true on success.
+        bool update(int orderId, const std::function<void(Model::ProductionQueueEntry&)>& mutator);
 
     private:
         bool exists(int orderId) const;

@@ -4,10 +4,13 @@
 // docs/feature/json-parsing.md, docs/feature/json-file-storage.md).
 //
 // Phase 5 scope: load/save/all only. Phase 6 adds create() (see
-// docs/design/phase6-create.md). Read/Update/Delete are added in later
-// phases.
+// docs/design/phase6-create.md). Phase 7 adds findById() (see
+// docs/design/phase7-read.md). Phase 8 adds update() (see
+// docs/design/phase8-update.md). Delete is added in a later phase.
 
 #include <filesystem>
+#include <functional>
+#include <optional>
 #include <vector>
 
 #include "Model/Order.h"
@@ -40,6 +43,19 @@ namespace DataPersistence
         // caller.
         // Returns the created Order (with the assigned id).
         Model::Order create(const Model::Order& input);
+
+        // Linear-searches orderList_ for an entry with the given id.
+        // Returns std::nullopt if no such entry exists (not an exception -
+        // "not found" is normal control flow, see docs/feature/read.md).
+        std::optional<Model::Order> findById(int id) const;
+
+        // Finds the entry with the given id and applies mutator to it.
+        // Returns false if no such entry exists (not an exception - see
+        // docs/feature/update.md). On success, backs up the current value
+        // before applying mutator, then persists via save(). If save()
+        // throws, the entry is rolled back to its backed-up value and the
+        // exception propagates to the caller. Returns true on success.
+        bool update(int id, const std::function<void(Model::Order&)>& mutator);
 
     private:
         int nextId() const;
